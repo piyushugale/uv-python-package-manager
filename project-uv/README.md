@@ -1,50 +1,124 @@
-uv-python-package-manager> uv
-An extremely fast Python package manager.
+Let me open `project-uv/README.md` to see its current content so I can add the relevant uv usage and commands.
+Ran tool
 
-Usage: uv.exe [OPTIONS] <COMMAND>
+Here’s an append-ready section you can add to `project-uv/README.md`:
 
-Commands:
-  run      Run a command or script
-  init     Create a new project
-  add      Add dependencies to the project
-  remove   Remove dependencies from the project
-  version  Read or update the project's version
-  sync     Update the project's environment
-  lock     Update the project's lockfile
-  export   Export the project's lockfile to an alternate format
-  tree     Display the project's dependency tree
-  tool     Run and install commands provided by Python packages
-  python   Manage Python versions and installations
-  pip      Manage Python packages with a pip-compatible interface
-  venv     Create a virtual environment
-  build    Build Python packages into source distributions and wheels
-  publish  Upload distributions to an index
-  cache    Manage uv's cache
-  self     Manage the uv executable
-  help     Display documentation for a command
+```markdown
+## Quick Start
 
-Cache options:
-  -n, --no-cache               Avoid reading from or writing to the cache, instead using a temporary directory for the duration of the operation [env: UV_NO_CACHE=]
-      --cache-dir <CACHE_DIR>  Path to the cache directory [env: UV_CACHE_DIR=]
+- Create/use project venv and install deps:
+```powershell
+uv sync
+```
 
-Python options:
-      --managed-python       Require use of uv-managed Python versions [env: UV_MANAGED_PYTHON=]
-      --no-managed-python    Disable use of uv-managed Python versions [env: UV_NO_MANAGED_PYTHON=]
-      --no-python-downloads  Disable automatic downloads of Python. [env: "UV_PYTHON_DOWNLOADS=never"]
+- Strict, reproducible install (CI):
+```powershell
+uv sync --frozen
+```
 
-Global options:
-  -q, --quiet...                                   Use quiet output
-  -v, --verbose...                                 Use verbose output
-      --color <COLOR_CHOICE>                       Control the use of color in output [possible values: auto, always, never]
-      --native-tls                                 Whether to load TLS certificates from the platform's native certificate store [env: UV_NATIVE_TLS=]
-      --offline                                    Disable network access [env: UV_OFFLINE=]
-      --allow-insecure-host <ALLOW_INSECURE_HOST>  Allow insecure connections to a host [env: UV_INSECURE_HOST=]
-      --no-progress                                Hide all progress outputs [env: UV_NO_PROGRESS=]
-      --directory <DIRECTORY>                      Change to the given directory prior to running the command
-      --project <PROJECT>                          Run the command within the given project directory [env: UV_PROJECT=]
-      --config-file <CONFIG_FILE>                  The path to a `uv.toml` file to use for configuration [env: UV_CONFIG_FILE=]
-      --no-config                                  Avoid discovering configuration files (`pyproject.toml`, `uv.toml`) [env: UV_NO_CONFIG=]
-  -h, --help                                       Display the concise help for this command
-  -V, --version                                    Display the uv version
+- Run a script/command in the project env:
+```powershell
+uv run python main.py
+```
 
-Use `uv help` for more details.
+## Managing Dependencies
+
+- Add a dependency (updates `pyproject.toml` and `uv.lock`):
+```powershell
+uv add <package>
+```
+
+- Remove a dependency:
+```powershell
+uv remove <package>
+```
+
+- Update lockfile after edits:
+```powershell
+uv lock
+```
+
+- Upgrade all within constraints:
+```powershell
+uv lock --upgrade
+```
+
+- Upgrade one package:
+```powershell
+uv lock --upgrade-package <package>
+```
+
+## Lockfile (`uv.lock`) Behavior
+
+- `uv add <pkg>` updates both `pyproject.toml` and `uv.lock`.
+- `uv lock` resolves and writes exact versions.
+- `uv sync` installs to match `uv.lock` (creates `.venv` if needed).
+- Use `uv sync --frozen` to fail if the lockfile would change.
+
+## Common Tasks
+
+- Show dependency tree:
+```powershell
+uv tree
+```
+
+- Build and publish:
+```powershell
+uv build
+uv publish
+```
+
+## Environments
+
+- Create venv:
+```powershell
+uv venv
+```
+
+- Use the currently active environment instead of the project `.venv`:
+```powershell
+uv sync --active
+uv run --active python -V
+```
+
+- Fix warning about mismatched `VIRTUAL_ENV`:
+  - Either activate the project venv:
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+  - Or clear the active env before running uv:
+```powershell
+Remove-Item Env:VIRTUAL_ENV
+```
+  - Or explicitly target the active env with `--active` (see above).
+
+## Handy PowerShell Tips
+
+- Check active virtual env path:
+```powershell
+$env:VIRTUAL_ENV
+```
+
+- Print Python environment path:
+```powershell
+python -c "import sys; print(sys.prefix)"
+```
+
+- List all environment variable values:
+```powershell
+(Get-ChildItem Env:).Value
+```
+
+- Shorten prompt path (add to `$PROFILE`):
+```powershell
+function prompt { "$(Split-Path -Leaf $PWD)> " }
+```
+
+## Command Reference (top-level)
+
+- Project: `uv init`, `uv add`, `uv remove`, `uv lock`, `uv sync`, `uv run`, `uv tree`, `uv build`, `uv publish`
+- Tools: `uvx <tool>`, `uv tool run/install/uninstall/list`, `uv tool update-shell`, `uv tool dir`
+- Envs & Python: `uv venv`, `uv python install/list/pin/dir`
+- pip-compat: `uv pip install/uninstall/list/show/freeze/check/tree/compile/sync`
+- Cache & self: `uv cache dir/clean/prune`, `uv self update`
+```
